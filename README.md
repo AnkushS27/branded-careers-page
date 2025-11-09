@@ -1,213 +1,248 @@
-# Careers Page Builder
+# Branded Careers Page Builder
 
-A full-stack SaaS platform that allows companies to create branded careers pages and manage job postings, while candidates can browse and search open positions.
+A multi-tenant SaaS platform where companies can create their own branded careers pages with custom styling, content sections, and job listings. Built with Next.js 15, Neon PostgreSQL, and Shadcn/ui.
 
 ## 🚀 Quick Start
 
-See **[QUICK_START.md](./QUICK_START.md)** for setup instructions.
-
 ```bash
-# 1. Setup environment
-cp .env.local.example .env.local
-# Edit .env.local with your DATABASE_URL
-
-# 2. Install & Setup
+# 1. Clone and install
 pnpm install
-pnpm db:sync
-pnpm db:seed
 
-# 3. Run
+# 2. Setup environment
+cp .env.local.example .env.local
+# Add your DATABASE_URL from Neon
+
+# 3. Setup database
+pnpm db:sync    # Creates tables
+pnpm db:seed    # Adds demo data (optional)
+
+# 4. Run development server
 pnpm dev
 ```
 
-## Features
+Visit http://localhost:3000 to get started!
 
-### For Recruiters
+**Demo Account** (if you seeded): `demo@company.com` / `demo123`
 
-- Email/password authentication
-- Create and manage company profiles
-- Customize brand theme (colors, logo, banner, culture video)
-- Add, edit, and remove page content sections (About Us, Culture, Benefits, etc.)
-- Create, edit, and delete job postings with full details
-- Publish/unpublish careers pages
-- Real-time preview of public pages
+For detailed setup instructions, see [QUICK_START.md](./QUICK_START.md)
 
-### For Candidates
+## What It Does
 
-- Browse published careers pages by company
-- Full-text search across job titles
-- Filter jobs by location and type
-- View detailed job information including salary ranges
-- Responsive, mobile-first UI
-- SEO-optimized pages with meta tags
+**For Companies:**
+
+- Create branded careers page with custom colors, logo, and banner
+- Add content sections (About, Culture, Benefits, etc.) with drag-and-drop ordering
+- Manage job postings with full details (salary, location, type, etc.)
+- Toggle published/draft state to control public visibility
+- Preview changes before publishing
+- Get shareable URL: `yourdomain.com/company-slug/careers`
+
+**For Job Seekers:**
+
+- Browse company careers pages
+- Search jobs by title or department
+- Filter by location and job type
+- View all job details including salary ranges
+- Responsive design works on any device
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
-- **Database**: Neon (PostgreSQL)
-- **Authentication**: Custom (email/password with hashed passwords)
-- **UI Library**: shadcn/ui + Tailwind CSS v4
+- **Framework**: Next.js 15 (App Router) with React 19
+- **Database**: Neon PostgreSQL (serverless)
+- **Authentication**: Custom bcrypt with HTTP-only cookies
+- **Styling**: Tailwind CSS v4 + Shadcn/ui components
 - **Language**: TypeScript
-- **Icons**: lucide-react
-- **Schema Management**: TypeScript-based schema with migrations
+- **Drag & Drop**: @dnd-kit
+- **Forms**: React Hook Form + Zod validation
 
-## Setup Instructions
+## Key Features
 
-### Prerequisites
-
-- Node.js 18+
-- Supabase account
-- Environment variables set up
-
-### Installation
-
-1. Clone the repository
-2. Install dependencies:
-   \`\`\`bash
-   npm install
-   \`\`\`
-
-3. Set up environment variables in `.env.local`:
-   \`\`\`
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL=http://localhost:3000
-   \`\`\`
-
-4. Run the database migrations:
-
-   - Open Supabase SQL editor
-   - Run the scripts from `/scripts/01_init_schema.sql`
-   - Optionally seed sample data from `/scripts/02_seed_data.sql`
-
-5. Start development server:
-   \`\`\`bash
-   npm run dev
-   \`\`\`
-
-6. Open [http://localhost:3000](http://localhost:3000)
+✅ Multi-tenant architecture (each company isolated)  
+✅ Custom authentication with secure password hashing  
+✅ Published/Draft state for careers pages  
+✅ Drag-and-drop section reordering  
+✅ Full CRUD for companies, jobs, and page sections  
+✅ Theme customization (3 colors, logo, banner, video)  
+✅ Real-time preview before publishing  
+✅ Protected routes with middleware  
+✅ Responsive design throughout  
+✅ Type-safe with TypeScript
 
 ## Project Structure
 
-\`\`\`
+```
 app/
-page.tsx # Landing page
-layout.tsx # Root layout
-globals.css # Global styles
-
-auth/
-login/ # Login page
-sign-up/ # Sign up page
-check-email/ # Email confirmation page
-
-dashboard/
-page.tsx # Dashboard home
-[companyId]/
-edit/ # Company settings
-page-sections/ # Content editor
-jobs/ # Jobs manager
-
-[slug]/
-careers/ # Public careers page
-
-lib/
-supabase/ # Supabase client setup
-types.ts # TypeScript interfaces
+  ├── page.tsx                    # Landing page
+  ├── auth/                       # Login & signup pages
+  ├── dashboard/                  # Company management
+  ├── [slug]/
+  │   ├── careers/               # Public careers page
+  │   ├── preview/               # Preview (protected)
+  │   └── edit/                  # Edit page (protected)
+  └── api/                       # API routes
+      ├── companies/             # Company CRUD
+      ├── jobs/                  # Jobs CRUD
+      ├── page-sections/         # Sections CRUD
+      └── auth/                  # Auth endpoints
 
 components/
-ui/ # shadcn components
-dashboard/ # Recruiter components
-public/ # Public page components
+  ├── ui/                        # Shadcn components
+  ├── careers/                   # Public page components
+  ├── dashboard/                 # Dashboard components
+  └── editor/                    # Edit page components
+
+lib/
+  ├── db/
+  │   ├── schema.ts              # Table definitions
+  │   ├── sql-generator.ts       # SQL generation
+  │   └── index.ts               # Database client
+  ├── types.ts                   # TypeScript types
+  └── utils.ts                   # Utilities
 
 scripts/
-01_init_schema.sql # Database schema
-02_seed_data.sql # Sample data
-\`\`\`
+  └── db.ts                      # Database CLI (sync, seed, reset)
+```
 
 ## Database Schema
 
-### companies
+**users** - User accounts with bcrypt hashed passwords  
+**companies** - Company profiles with branding and settings  
+**page_sections** - Customizable content sections (ordered)  
+**jobs** - Job postings with full details
 
-Stores company profiles with branding and settings.
+All tables use UUID primary keys and proper foreign key relationships.
 
-### page_sections
+## Database Management
 
-Reusable content sections for careers pages (About, Culture, Benefits, etc.).
+Custom TypeScript-based schema system with CLI commands:
 
-### jobs
+```bash
+pnpm db:sync      # Sync schema changes to database
+pnpm db:seed      # Add demo data
+pnpm db:reset     # Drop all tables and recreate (⚠️ deletes data)
+pnpm db:reseed    # Reset + seed in one command
+pnpm db:generate  # Generate SQL from schema files
+pnpm db:status    # Check current database state
+```
 
-Job postings with details like title, location, salary, experience level.
+Schema defined in `lib/db/schema.ts` as TypeScript objects, then auto-converted to SQL.
 
-## Security
+## Authentication Flow
 
-- Row-Level Security (RLS) on all database tables
-- User-isolated data access
-- Authentication required for recruiter features
-- Public read access for published careers pages only
+1. User signs up with email/password
+2. Password hashed with bcrypt (10 salt rounds)
+3. Auth token stored in HTTP-only cookies + localStorage
+4. Middleware protects `/dashboard`, `/edit`, `/preview` routes
+5. Public `/careers` pages accessible when `is_published = true`
 
-## User Flows
+## API Routes
 
-### Recruiter Flow
+All routes return JSON with proper status codes.
 
-1. Sign up / Login
-2. Create company
-3. Configure brand settings (colors, logo, banner)
-4. Add content sections to careers page
-5. Create and manage job postings
-6. Publish careers page
-7. Share public URL with candidates
+**Auth**
 
-### Candidate Flow
+- `POST /api/auth/signup` - Create account
+- `POST /api/auth/login` - Login
+- `POST /api/auth/logout` - Logout
 
-1. Visit company's public careers page
-2. Browse and filter jobs
-3. Search by job title
-4. Filter by location and job type
-5. View job details
+**Companies**
 
-## Future Improvements
-
-- Job application forms with resume upload
-- Email notifications for job applicants
-- Analytics dashboard (views, applications, conversions)
-- Drag-and-drop job listing reordering
-- Integration with ATS systems
-- Social sharing features
-- Advanced search with salary filters
-- Company profile ratings and reviews
-- Multi-language support
-
-## API Endpoints
-
-### Public
-
-- `GET /:slug/careers` - View company careers page
-
-### Protected (Recruiter Only)
-
+- `GET /api/companies` - List user's companies
 - `POST /api/companies` - Create company
-- `PUT /api/companies/:id` - Update company settings
-- `POST /api/jobs` - Create job posting
-- `PUT /api/jobs/:id` - Update job posting
-- `DELETE /api/jobs/:id` - Delete job posting
+- `GET /api/companies/[id]` - Get single company
+- `PUT /api/companies/[id]` - Update company
+- `GET /api/companies/by-slug/[slug]` - Get by slug
 
-## Performance Optimizations
+**Jobs**
 
-- Tailwind CSS with purging
-- Image optimization with next/image
-- Server-side rendering where possible
-- Database query optimization with indexes
-- Client-side caching with SWR patterns
+- `GET /api/jobs?company_id=xxx` - List company jobs
+- `POST /api/jobs` - Create job
+- `PUT /api/jobs/[id]` - Update job
+- `DELETE /api/jobs/[id]` - Delete job
+
+**Page Sections**
+
+- `GET /api/page-sections?company_id=xxx` - List sections (ordered)
+- `POST /api/page-sections` - Create section
+- `PUT /api/page-sections/[id]` - Update section (including order)
+- `DELETE /api/page-sections/[id]` - Delete section
+
+## Environment Variables
+
+```env
+DATABASE_URL=postgresql://user:pass@host.neon.tech/db
+NEXT_PUBLIC_BASE_URL=http://localhost:3000  # or production URL
+```
+
+Get `DATABASE_URL` from your [Neon Console](https://console.neon.tech).
 
 ## Deployment
 
-Deploy to Vercel:
+**Vercel (Recommended)**
 
 1. Push code to GitHub
-2. Connect GitHub repo to Vercel
-3. Set environment variables in Vercel dashboard
+2. Import project in Vercel
+3. Add `DATABASE_URL` environment variable
 4. Deploy
+5. Run `pnpm db:sync` to create tables in production DB
+
+**Manual Deployment**
+
+1. Build: `pnpm build`
+2. Start: `pnpm start`
+3. Make sure environment variables are set
+4. Database should be accessible from server
+
+## Development Workflow
+
+1. Make schema changes in `lib/db/schema.ts`
+2. Run `pnpm db:sync` to apply changes
+3. Update TypeScript types in `lib/types.ts` if needed
+4. Test changes locally
+5. Commit and push
+
+## Security Features
+
+- Passwords hashed with bcrypt (never stored plain text)
+- HTTP-only cookies prevent XSS attacks
+- Parameterized SQL queries prevent injection
+- Middleware protects all authenticated routes
+- Published flag controls public page visibility
+- Each company's data isolated by user_id
+
+## Known Limitations
+
+- No image upload (users paste URLs for now)
+- No job application system yet
+- No email verification on signup
+- No password reset functionality
+- Single user per company (no teams)
+- No analytics or metrics
+- Limited form validation in some places
+
+## Future Improvements
+
+- Image upload to cloud storage (Cloudinary/S3)
+- Job application forms with resume upload
+- Email system (verification, notifications, password reset)
+- Analytics dashboard (views, clicks, conversions)
+- Team collaboration (multiple users per company)
+- Custom domains for companies
+- Section templates library
+- API rate limiting
+- Better error handling and logging
+- Comprehensive test suite
+
+## Documentation
+
+- [QUICK_START.md](./QUICK_START.md) - Detailed setup guide
+- [TECH_SPEC.md](./TECH_SPEC.md) - Technical specification and architecture
+- [AGENT_LOG.md](./AGENT_LOG.md) - Development journey and decisions
+
+## License
+
+MIT
 
 ## Support
 
-For issues or questions, please open an issue on GitHub.
+For issues or questions, open an issue on GitHub.

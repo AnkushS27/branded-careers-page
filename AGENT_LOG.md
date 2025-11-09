@@ -1,130 +1,151 @@
-# AI Agent Work Log
+# Development Journey - Branded Careers Page
 
-## Project: Careers Page Builder
+## How This Project Came Together
 
-### Overview
-Built a full-stack careers page SaaS platform with recruiter dashboard and public job browsing using Supabase, Next.js 15, and shadcn/ui.
+### Starting Point
 
-### Workflow & Decisions
+So I started this whole thing with v0. Just threw in some prompts about what I wanted - a careers page builder where companies can create their own branded job listings. v0 gave me the basic structure, some rough API routes, and a basic wireframe to work with. It wasn't perfect but it was a good starting point I guess.
 
-#### Phase 1: Requirements Analysis
-- Read assignment document to understand scope
-- Identified 2 main user flows: Recruiters (admin) and Candidates (public)
-- Determined tech stack: Next.js 15, Supabase (PostgreSQL), shadcn/ui
-- Chose editorial/minimal UI aesthetic to differentiate from typical AI tool UIs
+### Getting It Working Locally
 
-#### Phase 2: Design & Planning
-- Generated design inspiration to establish visual direction
-- Created structured todo list for implementation phases
-- Designed database schema with multi-tenant support and RLS
-- Planned modular component architecture
+First thing I did was import everything to my local machine and see what actually works and what doesn't. Honestly, there were quite a few errors right off the bat, especially with the database connection. The connection strings were wrong, some environment variables weren't set up properly, and the Neon database wasn't connecting at all initially.
 
-#### Phase 3: Implementation
+I spent good amount of time just identifying errors one by one. Would run the app, see an error, fix it, run again, see another error. You know how it goes. The v0 generated code had these scripts for generating tables and doing migrations which was nice in theory but didnt work smoothly.
 
-**Database Setup**
-- Created 3 core tables: companies, page_sections, jobs
-- Implemented Row-Level Security (RLS) policies for data isolation
-- Added cascade deletes and proper foreign keys
-- Result: Secure multi-tenant data model
+### Database Setup & Schema Management
 
-**Authentication**
-- Set up Supabase Auth with email/password
-- Created middleware for protected routes
-- Implemented sign-up/login flow with email confirmation
-- Result: Production-ready auth system
+The biggest change I made was overhauling how database migrations work. v0 had some basic scripts but they were kinda messy and hard to maintain. So I created this whole schema model file system where I define all my tables in TypeScript files with proper types and everything.
 
-**Recruiter Dashboard**
-- Built company list view with quick actions
-- Created company settings editor (branding, colors, media)
-- Implemented tabbed interface for Settings/Content/Jobs
-- Result: Intuitive management interface
+Made custom functions that can:
 
-**Page Content Editor**
-- Built dynamic section manager (add/edit/delete/reorder)
-- Added visibility toggles for conditional rendering
-- Implemented save-all pattern for batch updates
-- Result: Flexible content management
+- Migrate changes automatically
+- Seed data for testing
+- Sync database when schema changes
+- Reset everything if needed
 
-**Job Management**
-- Created job creation dialog with full form
-- Built job edit dialog for updates
-- Implemented delete with confirmation
-- Result: Complete CRUD interface
+Then added them all to package.json so I can just run commands like `pnpm db:sync` or `pnpm db:reset` instead of running some long complicated commands. Way easier to work with.
 
-**Public Careers Page**
-- Built responsive careers page component
-- Implemented full-text search across job titles
-- Added location and job type filters
-- Created job card with formatted salary/metadata
-- Result: Polished candidate experience
+Also built this SQL generator function that creates, modifies, and alters tables automatically. It generates SQL queries based on the schema definitions so I don't have to write raw SQL every time. Saves alot of time honestly.
 
-**Error Handling & Polish**
-- Added global error boundary
-- Created 404 page
-- Added loading states and success messages
-- Implemented error messages throughout
+### Building Out Features
 
-#### Phase 4: Final Touches
-- Created comprehensive README with setup instructions
-- Wrote technical specification document
-- Added missing UI components (Dialog, Textarea)
-- Organized project structure and documentation
+After getting the database stable, I focused on making the actual features work properly:
 
-### Key Implementation Details
+**Authentication & Middleware**
 
-**Component Modularity**: Each feature isolated in separate components with clear props interfaces
+- Moved from Supabase auth to custom bcrypt authentication (seemed simpler for this use case)
+- Set up HTTP-only cookies for security
+- Created comprehensive middleware to protect routes
+- Made sure /dashboard, /edit, /preview routes are protected but /careers is public
 
-**Type Safety**: Full TypeScript coverage with interfaces for all data models
+**Draft/Published Feature**
+This was my idea - I thought it would be useful if companies could work on their careers page without it being live immediately. So I added an `is_published` flag to the companies table. When its false, the public careers page returns 404. When true, anyone can see it. Pretty straightforward but really useful.
 
-**RLS Strategy**: Nested queries to enforce company ownership at database level
+Also added a nice toggle switch on the edit page with a tooltip explaining what it does. Used Shadcn's Switch component for that.
 
-**UI Consistency**: Editorial aesthetic with generous spacing, clear typography, minimal colors
+**Content Management**
 
-### Decisions Made
+- Built a sections manager where companies can add different content sections
+- Added drag and drop reordering using @dnd-kit (this took some time to get right)
+- Made sure the order saves to database with a `section_order` column
+- All queries now use ORDER BY section_order ASC so sections display correctly
 
-1. **Server Components for Auth Pages**: Better security, no token exposure
-2. **Dialog-based Forms**: Less page navigation, faster UX
-3. **Supabase over Neon**: RLS built-in, better auth integration
-4. **Modular Components**: Easy to maintain and extend
-5. **Editorial Design**: Differentiate from typical AI tool UIs
+**Banner & Styling**
 
-### Challenges & Solutions
+- Added banner image support (was missing initially)
+- Made sure banner displays full width with proper text overlay
+- Added secondary color field to theme editor
+- Fixed alot of responsive design issues
 
-| Challenge | Solution |
-|-----------|----------|
-| Multi-tenant isolation | RLS policies with nested queries |
-| Real-time updates | Refresh after mutations in client |
-| Form complexity | Break into focused dialogs |
-| UI consistency | Design tokens + Tailwind classes |
+### Using AI Tools (Claude Sonnet 4.5)
 
-### AI Tool Usage
+I used GitHub Copilot with Claude Sonnet 4.5 model for most of the implementation work. My workflow was basically:
 
-- **Code Generation**: Scaffolded initial components and API routes
-- **Architecture Planning**: Refined database schema and component structure
-- **UI Components**: Generated form layouts and job cards
-- **Documentation**: Created README and tech specs
-- **Refinements**: Improved error handling, added proper typing
+1. Figure out what I need to build (brainstorming myself)
+2. Ask the agent to implement it
+3. Review the generated code carefully
+4. Test it thoroughly
+5. Ask for fixes if something doesn't work
 
-### Lessons Learned
+The agent was super helpful for:
 
-1. **Design Direction First**: Spending time on design inspiration saved iteration later
-2. **Modular Components Win**: Each feature easily testable and extendable
-3. **RLS is Powerful**: Shifted security responsibility from code to database
-4. **Multi-tenant is Complex**: Proper planning upfront prevents rewrites
-5. **Documentation Matters**: Comprehensive README helps future development
+- Generating API routes quickly
+- Creating UI components with proper TypeScript types
+- Fixing bugs and errors
+- Adding features like drag-and-drop
+- Updating existing code when requirements changed
 
-### Testing Recommendations
+But I made sure to review everything. Sometimes the agent would generate code that looked good but had bugs or didn't handle edge cases. So I always tested each part completely before moving on.
 
-- Unit tests for component logic
-- Integration tests for API routes
-- E2E tests for user flows
-- Performance tests on careers page load
+### Testing Everything
 
-### Deployment Checklist
+Made sure to test each part of the application:
 
-- [ ] Add env vars to Vercel dashboard
-- [ ] Run database migrations in production
-- [ ] Test auth flow end-to-end
-- [ ] Verify RLS policies with test accounts
-- [ ] Monitor error tracking service
-- [ ] Set up analytics
+- Middleware works correctly (redirects, auth checks, etc)
+- All API routes handle errors properly
+- Database queries return correct data
+- UI components render correctly
+- Forms validate input
+- Authentication flow works end to end
+- Published/draft toggle works as expected
+- Drag and drop saves order correctly
+
+Also checked code modularity - making sure components are reusable, functions are single-purpose, and everything is properly typed with TypeScript.
+
+### Tech Stack
+
+- **Frontend**: Next.js 15 (App Router), Tailwind CSS
+- **UI Components**: Shadcn/ui (with lots of components)
+- **Database**: Neon PostgreSQL
+- **Authentication**: Custom bcrypt with HTTP-only cookies
+- **Drag & Drop**: @dnd-kit
+- **Forms**: React Hook Form with Zod validation
+
+### What I Learned
+
+- Database schema planning is super important. Getting it right early saves tons of time later
+- Custom migration scripts are way better than relying on ORMs for simple projects
+- Middleware in Next.js 15 is powerful but you need to handle all the edge cases
+- Drag and drop is harder than it looks (especially saving the order properly)
+- AI tools are great but you still need to understand what the code does
+- Testing each feature completely before moving to next one prevents huge debugging sessions later
+
+### Things That Gave Me Trouble
+
+- Next.js 15 params being Promises took some time to understand and fix everywhere
+- Getting the banner image to not crop text was annoying (had to try multiple approaches)
+- Database column naming inconsistencies caused bugs until I standardized everything
+- Drag and drop library had some quirks with updating state
+- Middleware matching patterns needed careful configuration
+
+### Current State
+
+The app is pretty much complete now. Companies can:
+
+- Sign up and create account
+- Create company profile with branding (colors, logo, banner, etc)
+- Add content sections in any order
+- Manage jobs (create, edit, delete)
+- Toggle published/draft state
+- Preview before publishing
+
+Public users can:
+
+- View published careers pages
+- Search and filter jobs
+- See company branding and culture content
+
+Everything is tested and working. Code is modular and maintainable. Ready for deployment basically.
+
+### Future Ideas
+
+Some things that could be added later:
+
+- Job application system (right now just displays jobs)
+- Analytics for companies (page views, apply clicks)
+- Custom domains for companies
+- More theme customization options
+- Email notifications
+- Team collaboration (multiple users per company)
+
+But for now its a solid MVP that does what its supposed to do.
