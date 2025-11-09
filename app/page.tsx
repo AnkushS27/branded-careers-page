@@ -49,7 +49,7 @@ export default function Home() {
                 <Link href="/auth/login">
                   <Button className="px-8 py-3 h-auto">Get Started</Button>
                 </Link>
-                <Button variant="outline" className="px-8 py-3 h-auto bg-transparent" disabled>
+                <Button variant="outline" className="px-8 py-3 h-auto bg-transparent" onClick={() => window.open("https://branded-careers-page.vercel.app/demo-company/careers")}>
                   View Demo Company
                 </Button>
               </>
