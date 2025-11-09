@@ -5,6 +5,8 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import type { Company } from "@/lib/types"
 
 interface ThemeEditorProps {
@@ -33,17 +35,18 @@ export default function ThemeEditor({ company, onSave, isSaving }: ThemeEditorPr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
-      <div>
-        <label className="block text-sm font-medium mb-2">Company Name</label>
-        <Input name="name" value={formData.company_name} onChange={handleChange} placeholder="Your Company" />
+      <div className="space-y-2">
+        <Label htmlFor="company-name">Company Name</Label>
+        <Input id="company-name" name="name" value={formData.company_name} onChange={handleChange} placeholder="Your Company" />
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium mb-2">Primary Color</label>
+        <div className="space-y-2">
+          <Label htmlFor="primary-color">Primary Color</Label>
           <div className="flex gap-2">
             <input
               type="color"
+              id="primary-color"
               name="primary_color"
               value={formData.primary_color}
               onChange={handleColorChange}
@@ -58,11 +61,12 @@ export default function ThemeEditor({ company, onSave, isSaving }: ThemeEditorPr
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Secondary Color</label>
+        <div className="space-y-2">
+          <Label htmlFor="secondary-color">Secondary Color</Label>
           <div className="flex gap-2">
             <input
               type="color"
+              id="secondary-color"
               name="secondary_color"
               value={formData.secondary_color}
               onChange={handleColorChange}
@@ -77,11 +81,12 @@ export default function ThemeEditor({ company, onSave, isSaving }: ThemeEditorPr
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Accent Color</label>
+        <div className="space-y-2">
+          <Label htmlFor="accent-color">Accent Color</Label>
           <div className="flex gap-2">
             <input
               type="color"
+              id="accent-color"
               name="accent_color"
               value={formData.accent_color}
               onChange={handleColorChange}
@@ -97,9 +102,10 @@ export default function ThemeEditor({ company, onSave, isSaving }: ThemeEditorPr
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-2">Logo URL</label>
+      <div className="space-y-2">
+        <Label htmlFor="logo-url">Logo URL</Label>
         <Input
+          id="logo-url"
           name="logo_url"
           value={formData.logo_url || ""}
           onChange={handleChange}
@@ -107,9 +113,10 @@ export default function ThemeEditor({ company, onSave, isSaving }: ThemeEditorPr
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-2">Banner URL</label>
+      <div className="space-y-2">
+        <Label htmlFor="banner-url">Banner URL</Label>
         <Input
+          id="banner-url"
           name="banner_image_url"
           value={formData.banner_image_url || ""}
           onChange={handleChange}
@@ -117,9 +124,10 @@ export default function ThemeEditor({ company, onSave, isSaving }: ThemeEditorPr
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-2">Culture Video URL</label>
+      <div className="space-y-2">
+        <Label htmlFor="video-url">Culture Video URL</Label>
         <Input
+          id="video-url"
           name="culture_video_url"
           value={formData.culture_video_url || ""}
           onChange={handleChange}
@@ -127,14 +135,14 @@ export default function ThemeEditor({ company, onSave, isSaving }: ThemeEditorPr
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-2">Company Description</label>
-        <textarea
+      <div className="space-y-2">
+        <Label htmlFor="company-description">Company Description</Label>
+        <Textarea
+          id="company-description"
           name="company_description"
           value={formData.company_description || ""}
           onChange={handleChange}
           placeholder="Tell your company story..."
-          className="w-full px-3 py-2 border border-border rounded bg-background"
           rows={4}
         />
       </div>

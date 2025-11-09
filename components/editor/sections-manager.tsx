@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import type { PageSection } from "@/lib/types"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable"
@@ -152,22 +154,23 @@ export default function SectionsManager({ companyId }: SectionsManagerProps) {
       <div className="p-6 bg-secondary rounded border border-border h-fit">
         <h3 className="text-lg font-semibold mb-4">Add New Section</h3>
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Title</label>
+          <div className="space-y-2">
+            <Label htmlFor="section-title">Title</Label>
             <Input
+              id="section-title"
               value={formData.title}
               onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
               placeholder="e.g., Why Join Us?"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Content</label>
-            <textarea
+          <div className="space-y-2">
+            <Label htmlFor="section-content">Content</Label>
+            <Textarea
+              id="section-content"
               value={formData.content}
               onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))}
               placeholder="Section content..."
-              className="w-full px-3 py-2 border border-border rounded bg-background"
               rows={4}
             />
           </div>

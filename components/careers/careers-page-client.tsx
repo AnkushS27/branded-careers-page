@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import JobCard from "./job-card"
 import type { Company, Job } from "@/lib/types"
 
@@ -13,8 +15,8 @@ interface CareersPageClientProps {
 
 export default function CareersPageClient({ company, jobs, sections }: CareersPageClientProps) {
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedLocation, setSelectedLocation] = useState("")
-  const [selectedJobType, setSelectedJobType] = useState("")
+  const [selectedLocation, setSelectedLocation] = useState("all")
+  const [selectedJobType, setSelectedJobType] = useState("all")
 
   const locations = Array.from(new Set(jobs.map((j) => j.location).filter(Boolean)))
   const jobTypes = Array.from(new Set(jobs.map((j) => j.job_type).filter(Boolean)))
@@ -24,8 +26,8 @@ export default function CareersPageClient({ company, jobs, sections }: CareersPa
       const matchesSearch =
         job.job_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (job.department?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
-      const matchesLocation = !selectedLocation || job.location === selectedLocation
-      const matchesJobType = !selectedJobType || job.job_type === selectedJobType
+      const matchesLocation = selectedLocation === "all" || job.location === selectedLocation
+      const matchesJobType = selectedJobType === "all" || job.job_type === selectedJobType
 
       return matchesSearch && matchesLocation && matchesJobType
     })
@@ -93,45 +95,49 @@ export default function CareersPageClient({ company, jobs, sections }: CareersPa
 
         {/* Search and filters */}
         <div className="grid md:grid-cols-3 gap-4 mb-12">
-          <div>
-            <label className="block text-sm font-medium mb-2">Search by title or department</label>
+          <div className="space-y-2">
+            <Label htmlFor="search-jobs">Search by title or department</Label>
             <Input
+              id="search-jobs"
               type="text"
               placeholder="e.g. Engineer, Marketing"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Location</label>
-            <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded bg-background"
-            >
-              <option value="">All Locations</option>
-              {locations.map((location) => (
-                <option key={location} value={location}>
-                  {location}
-                </option>
-              ))}
-            </select>
+          
+          <div className="space-y-2">
+            <Label htmlFor="location-filter">Location</Label>
+            <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+              <SelectTrigger className="w-full" id="location-filter">
+                <SelectValue placeholder="All Locations" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Locations</SelectItem>
+                {locations.map((location) => (
+                  <SelectItem key={location} value={location || "unknown"}>
+                    {location}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Job Type</label>
-            <select
-              value={selectedJobType}
-              onChange={(e) => setSelectedJobType(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded bg-background"
-            >
-              <option value="">All Types</option>
-              {jobTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
+          <div className="space-y-2">
+            <Label htmlFor="jobtype-filter">Job Type</Label>
+            <Select value={selectedJobType} onValueChange={setSelectedJobType}>
+              <SelectTrigger className="w-full" id="jobtype-filter">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {jobTypes.map((type) => (
+                  <SelectItem key={type} value={type || "unknown"}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

@@ -10,7 +10,7 @@ import SectionsManager from "@/components/editor/sections-manager"
 import JobsManager from "@/components/editor/jobs-manager"
 import type { Company } from "@/lib/types"
 import Link from "next/link"
-import { Eye, Globe, EyeOff, ArrowLeft } from "lucide-react"
+import { Eye, Globe, EyeOff, ArrowLeft, ExternalLink } from "lucide-react"
 
 interface Tab {
   id: string
@@ -102,16 +102,16 @@ export default function EditPage({ params }: { params: Promise<{ slug: string }>
   return (
     <main className="min-h-screen bg-background">
       <div className="container-main py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 flex-wrap md:flex-nowrap gap-4">
           <div>
             <h1 className="text-3xl font-bold">{company.company_name}</h1>
             <p className="text-muted">Edit your careers page</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap md:flex-nowrap">
             <Link href={`/${company.company_slug}/preview`} target="_blank">
               <Button variant="outline" size="sm">
-                <Eye className="w-3.5 h-3.5 mr-2" />
                 Preview
+                <ExternalLink className="h-3.5 w-3.5 ml-2" />
               </Button>
             </Link>
 
