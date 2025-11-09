@@ -5,20 +5,31 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
+import { setAuthToken } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function SignUpPage() {
+  const [companyName, setCompanyName] = useState("")
+  const [slug, setSlug] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+
+  // Auto-generate slug from company name
+  const handleCompanyNameChange = (value: string) => {
+    setCompanyName(value)
+    const generatedSlug = value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+    setSlug(generatedSlug)
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,17 +42,48 @@ export default function SignUpPage() {
       return
     }
 
+    if (!companyName.trim()) {
+      setError("Company name is required")
+      setIsLoading(false)
+      return
+    }
+
+    if (!slug.trim()) {
+      setError("Company slug is required")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          company_name: companyName,
+          slug,
+          email,
+          password,
+        }),
       })
 
-      if (error) throw error
-      router.push("/auth/check-email")
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Sign up failed")
+      }
+
+      // Store auth token and company info
+      setAuthToken(data.token)
+      localStorage.setItem("user_id", data.user_id)
+      localStorage.setItem("user_email", data.user_email)
+      localStorage.setItem("company_id", data.company_id)
+      localStorage.setItem("company_slug", data.company_slug)
+      localStorage.setItem("company_name", data.company_name)
+
+      // Redirect to dashboard
+      router.push("/dashboard")
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign up failed")
     } finally {
@@ -59,6 +101,33 @@ export default function SignUpPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignUp} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="companyName">Company Name</Label>
+                <Input
+                  id="companyName"
+                  type="text"
+                  placeholder="Acme Inc."
+                  value={companyName}
+                  onChange={(e) => handleCompanyNameChange(e.target.value)}
+                  disabled={isLoading}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="slug">Company URL Slug</Label>
+                <Input
+                  id="slug"
+                  type="text"
+                  placeholder="acme-inc"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  disabled={isLoading}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Your careers page will be at: yoursite.com/{slug || "your-slug"}
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -81,6 +150,7 @@ export default function SignUpPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                   required
+                  minLength={6}
                 />
               </div>
               <div className="space-y-2">
@@ -93,6 +163,7 @@ export default function SignUpPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isLoading}
                   required
+                  minLength={6}
                 />
               </div>
               {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded">{error}</p>}

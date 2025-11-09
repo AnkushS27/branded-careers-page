@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,7 +26,6 @@ export default function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyD
   const [slug, setSlug] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,27 +33,30 @@ export default function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyD
     setError(null)
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const userId = localStorage.getItem("user_id")
+      if (!userId) throw new Error("Not authenticated")
 
-      if (!user) throw new Error("Not authenticated")
-
-      const { data, error: insertError } = await supabase
-        .from("companies")
-        .insert({
-          user_id: user.id,
+      const response = await fetch("/api/companies", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userId,
           company_name: name,
           company_slug: slug,
           primary_color: "#000000",
           secondary_color: "#ffffff",
           accent_color: "#3b82f6",
-        })
-        .select()
-        .single()
+        }),
+      })
 
-      if (insertError) throw insertError
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to create company")
+      }
 
+      const data = await response.json()
       onCompanyCreated(data)
       setName("")
       setSlug("")

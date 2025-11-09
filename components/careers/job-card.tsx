@@ -8,16 +8,16 @@ interface JobCardProps {
 
 export default function JobCard({ job, accentColor }: JobCardProps) {
   const salaryDisplay =
-    job.salary_min && job.salary_max ? `${job.salary_currency} ${job.salary_min}K–${job.salary_max}K` : null
+    job.salary_min && job.salary_max ? `${job.salary_currency} ${job.salary_min}–${job.salary_max}` : null
 
   return (
     <div className="p-6 border border-border rounded hover:shadow-md transition">
       <div className="flex items-start justify-between gap-4 mb-4">
         <div className="flex-1">
-          <h3 className="text-xl font-semibold mb-1">{job.title}</h3>
+          <h3 className="text-xl font-semibold mb-1">{job.job_title}</h3>
           <p className="text-muted text-sm">{job.department}</p>
         </div>
-        {job.posted_days_ago <= 7 && (
+        {job.posted_at && new Date(job.posted_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
           <Badge variant="outline" className="text-xs">
             New
           </Badge>

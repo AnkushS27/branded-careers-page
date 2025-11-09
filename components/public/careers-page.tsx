@@ -30,20 +30,43 @@ export default function CareersPage({ company, jobs, sections }: CareersPageProp
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="text-white py-20" style={{ backgroundColor: company.primary_color }}>
-        <div className="max-w-6xl mx-auto px-6">
-          {company.logo_url && (
-            <img
-              src={company.logo_url || "/placeholder.svg"}
-              alt={company.company_name}
-              className="h-12 mb-6 object-contain"
-            />
-          )}
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">{company.company_name}</h1>
-          <p className="text-lg opacity-90">{company.company_description}</p>
+      {/* Hero Banner */}
+      {company.banner_image_url ? (
+        <div className="relative min-h-[400px] md:min-h-[500px] w-full">
+          <img 
+            src={company.banner_image_url} 
+            alt={`${company.company_name} banner`}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="relative bg-black/50 min-h-[400px] md:min-h-[500px] flex flex-col justify-center py-8 md:py-12">
+            <div className="w-full px-6 md:px-12 text-white">
+              {company.logo_url && (
+                <img
+                  src={company.logo_url || "/placeholder.svg"}
+                  alt={company.company_name}
+                  className="h-12 md:h-16 mb-6 object-contain"
+                />
+              )}
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">{company.company_name}</h1>
+              <p className="text-lg md:text-xl opacity-90 leading-relaxed">{company.company_description}</p>
+            </div>
+          </div>
         </div>
-      </header>
+      ) : (
+        <header className="text-white py-20" style={{ backgroundColor: company.primary_color }}>
+          <div className="w-full px-6 md:px-12">
+            {company.logo_url && (
+              <img
+                src={company.logo_url || "/placeholder.svg"}
+                alt={company.company_name}
+                className="h-12 mb-6 object-contain"
+              />
+            )}
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">{company.company_name}</h1>
+            <p className="text-lg opacity-90">{company.company_description}</p>
+          </div>
+        </header>
+      )}
 
       {/* Content Sections */}
       {sections.map((section) => (

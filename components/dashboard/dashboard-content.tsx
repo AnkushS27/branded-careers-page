@@ -1,24 +1,33 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import type { User } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import type { Company } from "@/lib/types"
 import CompanyList from "./company-list"
 import CreateCompanyDialog from "./create-company-dialog"
+import { logout } from "@/lib/auth"
+import { useRouter } from "next/navigation"
 
-export default function DashboardContent({ user }: { user: User }) {
+interface DashboardContentProps {
+  userId: string
+  userEmail: string
+}
+
+export default function DashboardContent({ userId, userEmail }: DashboardContentProps) {
   const [companies, setCompanies] = useState<Company[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
+  const router = useRouter()
 
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const { data, error } = await supabase.from("companies").select("*").eq("user_id", user.id)
+        const response = await fetch(`/api/companies?user_id=${userId}`)
 
-        if (error) throw error
+        if (!response.ok) {
+          throw new Error("Failed to fetch companies")
+        }
+
+        const data = await response.json()
         setCompanies(data || [])
       } catch (err) {
         console.error("Error fetching companies:", err)
@@ -28,10 +37,15 @@ export default function DashboardContent({ user }: { user: User }) {
     }
 
     fetchCompanies()
-  }, [supabase, user.id])
+  }, [userId])
 
   const handleCompanyCreated = (newCompany: Company) => {
     setCompanies([...companies, newCompany])
+  }
+
+  const handleLogout = () => {
+    logout()
+    router.push("/auth/login")
   }
 
   return (
@@ -41,8 +55,8 @@ export default function DashboardContent({ user }: { user: User }) {
         <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.email}</span>
-            <Button variant="outline" size="sm" onClick={() => supabase.auth.signOut()}>
+            <span className="text-sm text-gray-600">{userEmail}</span>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
               Sign Out
             </Button>
           </div>

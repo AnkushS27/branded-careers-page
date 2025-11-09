@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -33,7 +32,6 @@ export default function CreateJobDialog({ companyId, onJobCreated, onClose }: Cr
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -49,9 +47,12 @@ export default function CreateJobDialog({ companyId, onJobCreated, onClose }: Cr
     setError(null)
 
     try {
-      const { data, error: insertError } = await supabase
-        .from("jobs")
-        .insert({
+      const response = await fetch("/api/jobs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           company_id: companyId,
           job_title: formData.job_title,
           job_slug: formData.job_slug || formData.job_title.toLowerCase().replace(/\s+/g, "-"),
@@ -64,12 +65,15 @@ export default function CreateJobDialog({ companyId, onJobCreated, onClose }: Cr
           salary_min: formData.salary_min ? Number.parseInt(formData.salary_min) : null,
           salary_max: formData.salary_max ? Number.parseInt(formData.salary_max) : null,
           salary_currency: formData.salary_currency,
-        })
-        .select()
-        .single()
+        }),
+      })
 
-      if (insertError) throw insertError
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to create job")
+      }
 
+      const data = await response.json()
       onJobCreated(data)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to create job")

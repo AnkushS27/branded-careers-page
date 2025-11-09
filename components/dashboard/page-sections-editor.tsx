@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -31,7 +30,6 @@ export default function PageSectionsEditor({ company, sections: initialSections 
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleAddSection = async () => {
     if (!newSectionType) return
@@ -39,21 +37,27 @@ export default function PageSectionsEditor({ company, sections: initialSections 
     setIsLoading(true)
     try {
       const sectionType = SECTION_TYPES.find((t) => t.value === newSectionType)
-      const { data, error: insertError } = await supabase
-        .from("page_sections")
-        .insert({
+      const response = await fetch("/api/page-sections", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           company_id: company.id,
           section_type: newSectionType,
           section_title: sectionType?.label || "",
           section_content: "",
           section_order: sections.length,
           is_visible: true,
-        })
-        .select()
-        .single()
+        }),
+      })
 
-      if (insertError) throw insertError
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to add section")
+      }
 
+      const data = await response.json()
       setSections([...sections, data])
       setNewSectionType("")
     } catch (err: unknown) {
@@ -71,9 +75,13 @@ export default function PageSectionsEditor({ company, sections: initialSections 
     if (!confirm("Delete this section?")) return
 
     try {
-      const { error: deleteError } = await supabase.from("page_sections").delete().eq("id", id)
+      const response = await fetch(`/api/page-sections/${id}`, {
+        method: "DELETE",
+      })
 
-      if (deleteError) throw deleteError
+      if (!response.ok) {
+        throw new Error("Failed to delete section")
+      }
 
       setSections(sections.filter((s) => s.id !== id))
     } catch (err: unknown) {
@@ -89,17 +97,23 @@ export default function PageSectionsEditor({ company, sections: initialSections 
     try {
       // Update all sections
       for (const section of sections) {
-        const { error: updateError } = await supabase
-          .from("page_sections")
-          .update({
+        const response = await fetch(`/api/page-sections/${section.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
             section_title: section.section_title,
             section_content: section.section_content,
             section_order: section.section_order,
             is_visible: section.is_visible,
-          })
-          .eq("id", section.id)
+          }),
+        })
 
-        if (updateError) throw updateError
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || "Failed to save sections")
+        }
       }
 
       setSuccess(true)

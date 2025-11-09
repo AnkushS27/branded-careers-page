@@ -16,7 +16,8 @@ export default function JobsManager({ companyId }: JobsManagerProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
-    title: "",
+    job_title: "",
+    job_slug: "",
     department: "",
     location: "",
     job_type: "",
@@ -24,7 +25,7 @@ export default function JobsManager({ companyId }: JobsManagerProps) {
     experience_level: "",
     salary_min: "",
     salary_max: "",
-    description: "",
+    job_description: "",
   })
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function JobsManager({ companyId }: JobsManagerProps) {
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch(`/api/jobs?companyId=${companyId}`)
+      const response = await fetch(`/api/jobs?company_id=${companyId}`)
       if (response.ok) {
         const data = await response.json()
         setJobs(data)
@@ -54,15 +55,24 @@ export default function JobsManager({ companyId }: JobsManagerProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           company_id: companyId,
-          ...formData,
+          job_title: formData.job_title,
+          job_slug: formData.job_slug || formData.job_title.toLowerCase().replace(/\s+/g, "-"),
+          job_description: formData.job_description,
+          department: formData.department,
+          location: formData.location,
+          job_type: formData.job_type,
+          employment_type: formData.employment_type,
+          experience_level: formData.experience_level,
           salary_min: formData.salary_min ? Number.parseInt(formData.salary_min) : null,
           salary_max: formData.salary_max ? Number.parseInt(formData.salary_max) : null,
+          salary_currency: "USD",
         }),
       })
 
       if (response.ok) {
         setFormData({
-          title: "",
+          job_title: "",
+          job_slug: "",
           department: "",
           location: "",
           job_type: "",
@@ -70,7 +80,7 @@ export default function JobsManager({ companyId }: JobsManagerProps) {
           experience_level: "",
           salary_min: "",
           salary_max: "",
-          description: "",
+          job_description: "",
         })
         setShowForm(false)
         fetchJobs()
@@ -101,12 +111,21 @@ export default function JobsManager({ companyId }: JobsManagerProps) {
         <form onSubmit={handleAddJob} className="p-6 bg-secondary rounded border border-border space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Title</label>
+              <label className="block text-sm font-medium mb-2">Job Title</label>
               <Input
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                value={formData.job_title}
+                onChange={(e) => setFormData((prev) => ({ ...prev, job_title: e.target.value }))}
                 placeholder="Job Title"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Job Slug</label>
+              <Input
+                value={formData.job_slug}
+                onChange={(e) => setFormData((prev) => ({ ...prev, job_slug: e.target.value }))}
+                placeholder="Auto-generated from title"
               />
             </div>
 
@@ -192,13 +211,13 @@ export default function JobsManager({ companyId }: JobsManagerProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Description</label>
+            <label className="block text-sm font-medium mb-2">Job Description</label>
             <textarea
-              value={formData.description}
+              value={formData.job_description}
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  description: e.target.value,
+                  job_description: e.target.value,
                 }))
               }
               placeholder="Job description..."
@@ -222,7 +241,7 @@ export default function JobsManager({ companyId }: JobsManagerProps) {
           {jobs.map((job) => (
             <div key={job.id} className="p-4 border border-border rounded flex justify-between items-start">
               <div className="flex-1">
-                <h4 className="font-semibold">{job.title}</h4>
+                <h4 className="font-semibold">{job.job_title}</h4>
                 <p className="text-sm text-muted">
                   {job.location} • {job.employment_type}
                 </p>

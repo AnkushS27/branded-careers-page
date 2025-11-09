@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import type { Company, Job } from "@/lib/types"
 import Link from "next/link"
@@ -18,7 +17,6 @@ export default function JobsManager({ company, jobs: initialJobs }: JobsManagerP
   const [jobs, setJobs] = useState(initialJobs)
   const [editingJob, setEditingJob] = useState<Job | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const supabase = createClient()
 
   const handleJobCreated = (newJob: Job) => {
     setJobs([newJob, ...jobs])
@@ -34,9 +32,14 @@ export default function JobsManager({ company, jobs: initialJobs }: JobsManagerP
     if (!confirm("Delete this job posting?")) return
 
     try {
-      const { error } = await supabase.from("jobs").delete().eq("id", jobId)
+      const response = await fetch(`/api/jobs/${jobId}`, {
+        method: "DELETE",
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error("Failed to delete job")
+      }
+
       setJobs(jobs.filter((j) => j.id !== jobId))
     } catch (err) {
       console.error("Error deleting job:", err)

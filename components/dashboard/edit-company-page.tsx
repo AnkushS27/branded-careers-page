@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,7 +21,6 @@ export default function EditCompanyPage({ company }: EditCompanyPageProps) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -46,9 +44,12 @@ export default function EditCompanyPage({ company }: EditCompanyPageProps) {
     setSuccess(false)
 
     try {
-      const { error: updateError } = await supabase
-        .from("companies")
-        .update({
+      const response = await fetch(`/api/companies/${company.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           company_name: formData.company_name,
           company_description: formData.company_description,
           logo_url: formData.logo_url,
@@ -57,10 +58,14 @@ export default function EditCompanyPage({ company }: EditCompanyPageProps) {
           primary_color: formData.primary_color,
           secondary_color: formData.secondary_color,
           accent_color: formData.accent_color,
-        })
-        .eq("id", company.id)
+        }),
+      })
 
-      if (updateError) throw updateError
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to update company")
+      }
+
       setSuccess(true)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to update company")
@@ -72,12 +77,19 @@ export default function EditCompanyPage({ company }: EditCompanyPageProps) {
   const handlePublish = async () => {
     setIsLoading(true)
     try {
-      const { error: updateError } = await supabase
-        .from("companies")
-        .update({ is_published: !company.is_published })
-        .eq("id", company.id)
+      const response = await fetch(`/api/companies/${company.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_published: !company.is_published }),
+      })
 
-      if (updateError) throw updateError
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to publish")
+      }
+
       router.refresh()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to publish")

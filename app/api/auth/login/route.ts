@@ -1,5 +1,6 @@
-import { query } from "@/lib/db"
+import { query } from "@/lib/database"
 import { type NextRequest, NextResponse } from "next/server"
+import bcrypt from "bcryptjs"
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,32 +9,77 @@ export async function POST(request: NextRequest) {
     const { email, password } = await request.json()
     console.log("[v0] Login attempt:", { email })
 
-    // In production, use proper password hashing
-    // For demo purposes, we're using a simple check
-    if (email === "demo@company.com" && password === "demo123") {
-      console.log("[v0] Demo credentials matched, querying company")
-
-      const result = await query(`SELECT id, name, slug FROM companies WHERE slug = $1 LIMIT 1`, ["demo-company"])
-      console.log("[v0] Query result:", result)
-
-      if (result.length === 0) {
-        console.log("[v0] Demo company not found")
-        return NextResponse.json({ error: "Company not found" }, { status: 404 })
-      }
-
-      const token = Buffer.from(`${email}:${password}`).toString("base64")
-
-      console.log("[v0] Login successful")
-      return NextResponse.json({
-        token,
-        company_id: result[0].id,
-        company_slug: result[0].slug,
-        company_name: result[0].name,
-      })
+    // Validate input
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
     }
 
-    console.log("[v0] Invalid credentials")
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
+    // Find user by email
+    console.log("[v0] Looking up user")
+    const userResult = (await query(`SELECT id, email, password_hash FROM users WHERE email = $1`, [
+      email,
+    ])) as any[]
+
+    if (userResult.length === 0) {
+      console.log("[v0] User not found")
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
+    }
+
+    const user = userResult[0]
+
+    // Verify password with bcrypt
+    const isValidPassword = await bcrypt.compare(password, user.password_hash)
+
+    if (!isValidPassword) {
+      console.log("[v0] Invalid password")
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
+    }
+
+    // Find user's company
+    console.log("[v0] Looking up company for user:", user.id)
+    const companyResult = (await query(
+      `SELECT id, company_name, company_slug FROM companies WHERE user_id = $1 LIMIT 1`,
+      [user.id],
+    )) as any[]
+
+    if (companyResult.length === 0) {
+      console.log("[v0] No company found for user")
+      return NextResponse.json({ error: "No company found for this user" }, { status: 404 })
+    }
+
+    const company = companyResult[0]
+    const token = Buffer.from(`${email}:${password}`).toString("base64")
+
+    console.log("[v0] Login successful")
+    
+    // Create response with auth cookie
+    const response = NextResponse.json({
+      token,
+      user_id: user.id,
+      user_email: email,
+      company_id: company.id,
+      company_slug: company.company_slug,
+      company_name: company.company_name,
+    })
+
+    // Set HTTP-only cookie for server-side auth
+    response.cookies.set("auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
+    })
+
+    response.cookies.set("user_id", user.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    })
+
+    return response
   } catch (error) {
     console.error("[v0] Login error:", error)
     return NextResponse.json({ error: "Internal server error", details: String(error) }, { status: 500 })

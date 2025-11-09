@@ -1,7 +1,26 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { logout } from "@/lib/auth"
 
 export default function Home() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const authToken = localStorage.getItem("auth_token")
+    setIsAuthenticated(!!authToken)
+  }, [])
+
+  const handleLogout = async () => {
+    await logout()
+    setIsAuthenticated(false)
+  }
+
   return (
     <main className="min-h-screen bg-background">
       <div className="container-main section-spacing">
@@ -16,12 +35,25 @@ export default function Home() {
           </p>
 
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/login">
-              <Button className="px-8 py-3 h-auto">Get Started</Button>
-            </Link>
-            <Button variant="outline" className="px-8 py-3 h-auto bg-transparent" disabled>
-              View Demo Company
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <Link href="/dashboard">
+                  <Button className="px-8 py-3 h-auto">Go to Dashboard</Button>
+                </Link>
+                <Button variant="outline" className="px-8 py-3 h-auto" onClick={handleLogout}>
+                  Log Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button className="px-8 py-3 h-auto">Get Started</Button>
+                </Link>
+                <Button variant="outline" className="px-8 py-3 h-auto bg-transparent" disabled>
+                  View Demo Company
+                </Button>
+              </>
+            )}
           </div>
 
           <div className="mt-16 p-8 bg-secondary rounded-lg border border-border">

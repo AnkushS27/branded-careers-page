@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,7 +20,6 @@ export default function EditJobDialog({ job, onJobUpdated, onClose }: EditJobDia
   const [formData, setFormData] = useState(job)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -37,9 +35,12 @@ export default function EditJobDialog({ job, onJobUpdated, onClose }: EditJobDia
     setError(null)
 
     try {
-      const { error: updateError } = await supabase
-        .from("jobs")
-        .update({
+      const response = await fetch(`/api/jobs/${job.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           job_title: formData.job_title,
           job_description: formData.job_description,
           department: formData.department,
@@ -50,10 +51,13 @@ export default function EditJobDialog({ job, onJobUpdated, onClose }: EditJobDia
           salary_min: formData.salary_min ? Number.parseInt(formData.salary_min.toString()) : null,
           salary_max: formData.salary_max ? Number.parseInt(formData.salary_max.toString()) : null,
           salary_currency: formData.salary_currency,
-        })
-        .eq("id", job.id)
+        }),
+      })
 
-      if (updateError) throw updateError
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to update job")
+      }
 
       onJobUpdated(formData)
     } catch (err: unknown) {

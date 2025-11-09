@@ -35,7 +35,7 @@ export default function ThemeEditor({ company, onSave, isSaving }: ThemeEditorPr
     <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
       <div>
         <label className="block text-sm font-medium mb-2">Company Name</label>
-        <Input name="name" value={formData.name} onChange={handleChange} placeholder="Your Company" />
+        <Input name="name" value={formData.company_name} onChange={handleChange} placeholder="Your Company" />
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -54,6 +54,25 @@ export default function ThemeEditor({ company, onSave, isSaving }: ThemeEditorPr
               value={formData.primary_color}
               onChange={handleColorChange}
               placeholder="#000000"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Secondary Color</label>
+          <div className="flex gap-2">
+            <input
+              type="color"
+              name="secondary_color"
+              value={formData.secondary_color}
+              onChange={handleColorChange}
+              className="w-16 h-10 rounded cursor-pointer border border-border"
+            />
+            <Input
+              name="secondary_color"
+              value={formData.secondary_color}
+              onChange={handleColorChange}
+              placeholder="#ffffff"
             />
           </div>
         </div>
@@ -91,8 +110,8 @@ export default function ThemeEditor({ company, onSave, isSaving }: ThemeEditorPr
       <div>
         <label className="block text-sm font-medium mb-2">Banner URL</label>
         <Input
-          name="banner_url"
-          value={formData.banner_url || ""}
+          name="banner_image_url"
+          value={formData.banner_image_url || ""}
           onChange={handleChange}
           placeholder="https://example.com/banner.jpg"
         />
@@ -109,10 +128,10 @@ export default function ThemeEditor({ company, onSave, isSaving }: ThemeEditorPr
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">About Section</label>
+        <label className="block text-sm font-medium mb-2">Company Description</label>
         <textarea
-          name="about_section"
-          value={formData.about_section || ""}
+          name="company_description"
+          value={formData.company_description || ""}
           onChange={handleChange}
           placeholder="Tell your company story..."
           className="w-full px-3 py-2 border border-border rounded bg-background"
